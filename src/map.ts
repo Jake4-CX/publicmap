@@ -255,7 +255,7 @@ export function initLeafletMap({
 					html: `<a target="_blank" style="text-decoration:none;" href="https://kick.com/${kickUsername}">
 					<div class="user-marker-inner ${classNames.join(" ")}">
 						<div style="display:flex;align-content:center;">
-							<img class="avatar-image" style="margin-right:5px;border-radius:5px;" src="${avatar?.startsWith("/") ? avatar : `/${kickUsername}.webp`}" height="16px" width="16px" />
+							<img class="avatar-image" style="margin-right:5px;border-radius:5px;" src="${avatar?.startsWith("/") ? avatar : `/assets/profile_icons/${kickUsername}.webp`}" height="16px" width="16px" />
 							<div class="username">${displayName}</div>
 						</div>
 					</div>
@@ -354,7 +354,7 @@ export function initLeafletMap({
 		L.marker([lat, lng], {
 			icon: L.divIcon({
 				className: "user-marker",
-				html: `<img style="height:25px;max-height:25px; margin-left:-8px;margin-top:-6px; opacity:0.75;" src="/water.png" />`,
+				html: `<img style="height:25px;max-height:25px; margin-left:-8px;margin-top:-6px; opacity:0.75;" src="/assets/map_assets/water.png" />`,
 			}),
 		}).addTo(map);
 	}

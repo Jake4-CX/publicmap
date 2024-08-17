@@ -16,7 +16,7 @@ function disable(_reason: string) {
 	el.style.transform = "translate(-50%, -50%)";
 	el.style.fontSize = "2rem";
 	el.innerHTML =
-		'<p>The map has been disabled. Come back later.</p><img width="300px" src="news.png" style="margin-left: 30%;transform:rotateZ(-50deg);" />';
+		'<p>The map has been disabled. Come back later.</p><img width="300px" src="/assets/map_assets/news.png" style="margin-left: 30%;transform:rotateZ(-50deg);" />';
 	document.body.appendChild(el);
 }
 
