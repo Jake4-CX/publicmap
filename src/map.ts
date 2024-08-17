@@ -350,7 +350,7 @@ export function initLeafletMap({
 		L.marker([lat, lng], {
 			icon: L.divIcon({
 				className: "user-marker",
-				html: `<img style="height:25px;max-height:25px; margin-left:-8px;margin-top:-6px; opacity:0.75;" src="/assets/profile_icons/water.png" />`,
+				html: `<img style="height:25px;max-height:25px; margin-left:-8px;margin-top:-6px; opacity:0.75;" src="/assets/map_assets/water.png" />`,
 			}),
 		}).addTo(map);
 	}
