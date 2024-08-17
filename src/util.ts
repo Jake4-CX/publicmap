@@ -68,7 +68,7 @@ function isCommand(str: string) {
 }
 
 export type SettingsArray = ["S", boolean, boolean, number, number, number];
-export type UserArray = [string, string | 0, number[], number, number, string | 0, number];
+export type UserArray = [string, string | 0, number[], number, number, string | 0, number, number, string | 0];
 export type WebsocketMessage = string | (UserArray | SettingsArray)[];
 
 export function decode(encodedData: Uint8Array, decompressor: (buf: Uint8Array) => Uint8Array): WebsocketMessage {
@@ -122,3 +122,16 @@ export function formatDuration(ms: number, short = false, precise = false) {
 		.map(([key, val]) => `${val}${short ? "" : " "}${key}${val === 1 || short ? "" : "s"}`)
 		.join(short ? "" : ", ");
 }
+
+export type User = {
+	kickUsername: string;
+	displayName: string | null;
+	flags: number[];
+	lat: number;
+	lng: number;
+	avatar?: string | null;
+	real: boolean;
+	battery?: number;
+	hp?: number;
+	time?: string;
+};
