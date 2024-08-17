@@ -7,7 +7,7 @@
 .user-marker .user-marker-inner {
   background-color: rgb(83 252 24);
   width: fit-content;
-  padding: 4px 9px;
+  padding: 2px 5px;
   border-radius: 5px;
   color: black;
   transform: translateX(-50%) translateY(calc(-100% - 5px));
@@ -61,41 +61,59 @@ img.leaflet-tile, img.leaflet-marker-icon, img.leaflet-marker-shadow {
   z-index:9999;
 }
 
-#key > * {
-  padding: 4px 9px;
-  border-radius: 5px;
-}
-.picker {
+#key {
   z-index: 1000000000;
   position: absolute;
   top: 10px;
-  left: 55px;
+  right: 10px;
   background-color: transparent!important;
   z-index: 1000;
-  max-width: 100px;
+  max-width: 120px;
   border: none;
   display: flex;
   flex-direction: column;
-  border: none!important;
+  overflow-y: scroll;
+  overflow-x:hidden;
+  max-height: 80%;
 }
 
 .userpick {
   z-index: 1000000000;
-  padding: 4px 6px;
+  padding: 4px 5px;
   margin-bottom: 4px;
   color: black;
   border-radius: 3px;
-background-color: rgb(143, 139, 139);
   font-size: 12px;
   border: none!important;
-      padding: 4px 9px;
-    border-radius: 5px;
+  padding: 4px 9px;
+  border-radius: 5px;
+
+  cursor: pointer;
 }
 
-.leaflet-top.leaflet-right {
-  top: 100px;
-   width: 157px;
- 
-  border: none!important;
-  right: 10px;
+.username {
+  font-weight: bold;
+}
+
+.damaged {
+ background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 0, 0, 0.2),
+    rgba(255, 0, 0, 0.2) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+.contestant {
+  background-color: rgb(83 252 24);
+}
+
+.menu {
+ background-color: gray;
+ border-radius: 5px;
+ padding: 4px 5px;
+ margin-bottom: 5px;
+ color: black;
+ font-size: 12px;
 }

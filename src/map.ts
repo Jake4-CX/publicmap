@@ -2,42 +2,63 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "leaflet-draw/dist/leaflet.draw";
 
-import { Time } from "e";
 import { DIVISOR, EPOCH_LOCATION, type Location, tileServers } from "./universal";
+import type { User } from "./util";
+import { calcWhatPercent } from "e";
+import { settings } from "./main";
+
+const damagedUsers = new Set<string>();
+export const lastUserCache = new Map<string, User>();
 
 export const hiddenUsers = new Set(["snoopy"]);
 
-const livesRemainingCache = new Map<string, number>();
-const batteryCache = new Map<string, number>();
 const userMarkers = new Map<string, L.Marker<any>>();
 
-function trySetMarkerTooltip(kickUsername: string) {
-	const marker = userMarkers.get(kickUsername);
-	if (marker) {
-		marker.setTooltipContent(
-			`${kickUsername}: ${batteryCache.get(kickUsername) ?? "Unknown"}% battery, ${livesRemainingCache.get(kickUsername) ?? "Unknown"} lives remaining`,
-		);
+export function updateAllUserMarkers() {
+	for (const [kickUsername, marker] of Array.from(userMarkers.entries())) {
+		const user = lastUserCache.get(kickUsername);
+		if (user)marker.setIcon(getMarkerContent(user));
 	}
 }
-async function update() {
-	try {
-		const res = await fetch("https://appapi.iceposeidon.com/public").then((res) => res.json());
-		if (Array.isArray(res)) {
-			for (const user of res) {
-				livesRemainingCache.set(user.name, user.lives_remaining);
-				trySetMarkerTooltip(user.name);
-			}
-		}
-	} catch (_) {}
+
+function getMarkerContent(user: User) {
+	const { kickUsername, displayName, hp, battery, flags } = user;
+	const lastUser = lastUserCache.get(kickUsername);
+	if (!lastUser) {
+		lastUserCache.set(kickUsername, user);
+	}
+
+	const classNames = [];
+	if (flags.includes(2)) classNames.push("hunter");
+	if (flags.includes(5)) classNames.push("ingulag");
+
+	const didLoseHP = lastUser?.hp && hp && lastUser.hp > hp;
+	if (didLoseHP) {
+		damagedUsers.add(kickUsername);
+		setTimeout(() => damagedUsers.delete(kickUsername), 1000 * 10);
+	}
+	if (didLoseHP || damagedUsers.has(kickUsername)) {
+		classNames.push("damaged");
+	}
+
+	lastUserCache.set(kickUsername, user);
+
+	const html = `<a target="_blank" style="text-decoration:none;" href="https://kick.com/${kickUsername}">
+					<div class="user-marker-inner ${classNames.join(" ")}">
+						<div style="display:flex;align-content:center;">
+							<div class="username">${displayName}</div>
+							<br/>
+						</div>
+						${!settings.includes("hidelb") && hp ? `<div style="font-size:10px;" class="hp">${hp} Lives</div>` : ""}
+						${!settings.includes("hidelb") &&  battery && battery >= 1 ? `<div style="font-size:10px;">${battery}% Battery</div> ` : ""}
+					</div>
+				</a>`;
+
+	return L.divIcon({
+		className: "user-marker",
+		html: html,
+	});
 }
-
-setInterval(async () => {
-	update();
-}, Time.Minute);
-
-setTimeout(() => {
-	update();
-}, 1000 * 1.5);
 
 function createDefs(svg: any) {
 	const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
@@ -60,10 +81,20 @@ function createMask(defs: any) {
 	return mask;
 }
 
+function interpolateColor(percentage: number): string {
+	const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
+	percentage = clamp(percentage, 0, 100) / 100;
+
+	const r = percentage < 0.5 ? 255 : Math.round(255 * (1 - (percentage - 0.5) * 2));
+	const g = percentage < 0.5 ? Math.round(255 * (percentage * 2)) : 255;
+	const b = 0;
+
+	return `rgb(${r}, ${g}, ${b})`;
+}
+
 export function initLeafletMap({
 	mapID,
 	tileServer = tileServers.arcGIS,
-	showGoal = false,
 	mapOptions,
 	radiusMeters,
 	center,
@@ -74,7 +105,6 @@ export function initLeafletMap({
 	center: Location;
 	radiusMeters: number;
 	tileServer?: string;
-	showGoal?: boolean;
 	circleUpdateInterval?: number;
 	mapOptions?: L.MapOptions;
 }) {
@@ -131,7 +161,7 @@ export function initLeafletMap({
 			tile.style.height = `${tileSize.y + 1}px`;
 		},
 	});
-	L.tileLayer(tileServer).addTo(map);
+	L.tileLayer(tileServer, {maxNativeZoom: 30, maxZoom: 19, minNativeZoom: 15,minZoom: 15}).addTo(map);
 
 	/**
 	 *
@@ -212,25 +242,7 @@ export function initLeafletMap({
 		animationRequests.set(marker._leaflet_id, requestId);
 	}
 
-	function updateUserLocation({
-		kickUsername,
-		displayName,
-		flags,
-		lat,
-		lng,
-		avatar,
-		real,
-		battery,
-	}: {
-		kickUsername: string;
-		displayName: string | null;
-		flags: number[];
-		lat: number;
-		lng: number;
-		avatar?: string | null;
-		real: boolean;
-		battery?: number;
-	}) {
+	function updateUserLocation({ kickUsername, displayName, flags, lat, lng, avatar, real, battery, hp, time }: User) {
 		if (hiddenUsers.has(kickUsername)) return;
 		if (!displayName) displayName = kickUsername;
 		if (!real) {
@@ -244,47 +256,31 @@ export function initLeafletMap({
 		if (cached) {
 			animateMarker(cached, loc, 4000);
 			if (cachedNoAnimation) cachedNoAnimation.setLatLng(loc);
+			cached.setIcon(
+				getMarkerContent({ kickUsername, displayName, flags, hp, battery, time, lat, lng, avatar, real }),
+			);
 		} else {
-			const classNames = [];
-			if (flags.includes(2)) classNames.push("hunter");
-			if (flags.includes(5)) classNames.push("ingulag");
-
 			const marker = L.marker(loc, {
-				icon: L.divIcon({
-					className: "user-marker",
-					html: `<a target="_blank" style="text-decoration:none;" href="https://kick.com/${kickUsername}">
-					<div class="user-marker-inner ${classNames.join(" ")}">
-						<div style="display:flex;align-content:center;">
-							<img class="avatar-image" style="margin-right:5px;border-radius:5px;" src="${avatar?.startsWith("/") ? avatar : `/${kickUsername}.webp`}" height="16px" width="16px" />
-							<div class="username">${displayName}</div>
-						</div>
-					</div>
-				</a>`,
+				icon: getMarkerContent({
+					kickUsername,
+					displayName,
+					flags,
+					hp,
+					battery,
+					time,
+					lat,
+					lng,
+					avatar,
+					real,
 				}),
-			})
-				.addTo(map)
-				.bindTooltip("Loading", {
-					direction: "bottom",
-					offset: [0, -20],
-				});
-
-			trySetMarkerTooltip(kickUsername);
-			if (battery) batteryCache.set(kickUsername, battery);
+			}).addTo(map);
 
 			marker.on("mouseover", (ev) => {
 				ev.target.openPopup();
 			});
 
 			userMarkers.set(kickUsername, marker);
-			if (showGoal) {
-				const targetMarker = L.marker(loc, {
-					icon: L.divIcon({
-						html: '<div style="width: 5px; height: 5px; background-color: magenta; border-radius: 50%; transform: translateX(-50%);"></div>',
-						className: "",
-					}),
-				}).addTo(map);
-				userMarkers.set(`n-${kickUsername}`, targetMarker);
-			}
+
 			updatePanel();
 		}
 	}
@@ -326,7 +322,7 @@ export function initLeafletMap({
 			filterClass = "nighttime";
 		}
 
-		filterClass = "daytime";
+		filterClass = "nighttime";
 
 		const mapContainer = document.getElementById("map");
 		if (mapContainer) {
@@ -392,50 +388,43 @@ export function initLeafletMap({
 		}).addTo(map);
 	}
 
-	const panel = new L.Control({ position: "topright" });
-
 	function updatePanel() {
-		const div = L.DomUtil.create("div", "leaflet-control-layers leaflet-control picker");
+		const div = document.getElementById("key")!;
 
-		for (const [kickUsername, marker] of Array.from(userMarkers.entries()).sort(
-			(a, b) => b[1].getLatLng().lat - a[1].getLatLng().lat,
-		)) {
-			if (map.getBounds().contains(marker.getLatLng())) {
-				const button = L.DomUtil.create("button", "userpick", div);
-				button.innerHTML = `${kickUsername}`;
-				button.onclick = () => map.setView(marker.getLatLng(), 13);
+		for (const [kickUsername, user] of Array.from(lastUserCache.entries())) {
+			const marker = userMarkers.get(kickUsername);
+			if (marker) {
+				const button: HTMLDivElement = div.querySelector(`[kickname="${kickUsername}"]`) ?? document.createElement("div");
+				button.setAttribute("kickname", kickUsername);
+				const isHunter = user.flags.includes(2);
+				const isEliminated = user.flags.includes(4);
+				if (isEliminated) return;
+				const inGulag = user.flags.includes(5);
+
+				const classNames = ["userpick"];
+				if (isHunter) {
+					classNames.push("hunter");
+				} else if (inGulag) {
+					classNames.push("ingulag");
+				}
+
+				button.className = classNames.join(" ");
+				let text = `<span style="font-size:12px;font-weight:bold;">${user.displayName}</span>`;
+				if (!isHunter) {
+					text += `<br/><span style="font-size:10px;">${user.hp ?? "??"} Lives</span>`;
+				}
+				if (!isHunter && !inGulag) {
+					button	.style.backgroundColor = interpolateColor(calcWhatPercent(user.hp ?? 100, 100));
+				}
+				if (inGulag) {
+					button.style.backgroundColor = "#909090";
+				}
+				button.innerHTML = `${text}`;
+				button.onclick = () => map.setView(marker.getLatLng(), 20);
+				div.appendChild(button);
 			}
 		}
-		const container = panel.getContainer();
-		if (container) {
-			container.innerHTML = div.innerHTML;
-			for (const button of container.querySelectorAll(".userpick")) {
-				(button as HTMLButtonElement).onclick = () => {
-					const username = button.innerHTML;
-					const marker = userMarkers.get(username);
-					if (marker) {
-						map.setView(marker.getLatLng(), 25);
-					}
-				};
-			}
-		}
-		// apply onclick listeners
 	}
-
-	panel.onAdd = () => {
-		const div = L.DomUtil.create("div", "leaflet-control-layers leaflet-control picker");
-
-		for (const [kickUsername, marker] of userMarkers.entries()) {
-			const button = L.DomUtil.create("button", "", div);
-			button.innerHTML = `${kickUsername}`;
-			button.onclick = () => map.setView(marker.getLatLng(), 1);
-		}
-		return div;
-	};
-
-	updatePanel();
-
-	panel.addTo(map);
 
 	map.on("zoomend", updatePanel);
 	map.on("moveend", updatePanel);

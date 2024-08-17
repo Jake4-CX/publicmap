@@ -2,7 +2,7 @@ import brotliPromise from "brotli-wasm";
 
 import { config } from "./config";
 import { map } from "./main";
-import { hiddenUsers } from "./map";
+import { hiddenUsers, lastUserCache } from "./map";
 import { type SettingsArray, type UserArray, decode } from "./util";
 
 function disable(_reason: string) {
@@ -33,6 +33,7 @@ export async function initiateWs(retryCount = 0) {
 				const kickName = decompressed.replace("HIDE:", "");
 				hiddenUsers.add(kickName);
 				map.deleteUser(kickName);
+				lastUserCache.delete(kickName);
 			} else if (decompressed === "DISABLE") {
 				disable("DISABLED_BY_SERVER");
 				ws?.close();
@@ -64,6 +65,8 @@ export async function initiateWs(retryCount = 0) {
 						avatar: typeof user[5] === "string" ? user[5] : null,
 						real: false,
 						battery: user[6],
+						hp: user[7],
+						time: typeof user[8],
 					});
 				}
 			}
