@@ -1,0 +1,101 @@
+
+.user-marker {
+  width: max-content;
+  text-wrap: nowrap;
+}
+
+.user-marker .user-marker-inner {
+  background-color: rgb(83 252 24);
+  width: fit-content;
+  padding: 4px 9px;
+  border-radius: 5px;
+  color: black;
+  transform: translateX(-50%) translateY(calc(-100% - 5px));
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+
+.user-marker .user-marker-inner::after {
+  content: "";
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 9px;
+  border-style: solid;
+  border-color: rgb(83 252 24) transparent transparent transparent;
+}
+
+img.leaflet-tile, img.leaflet-marker-icon, img.leaflet-marker-shadow {
+    outline: 1px solid transparent;
+    mix-blend-mode: initial!important;
+}
+
+.user-marker .user-marker-inner.hunter, #key .hunter {
+  background-color: rgb(211 0 0);
+}
+
+.user-marker .user-marker-inner.hunter::after {
+  border-color: rgb(211 0 0) transparent transparent transparent;
+}
+
+.user-marker .user-marker-inner.ingulag, #key .gulag  {
+  background-color: rgb(143, 139, 139);
+}
+
+.user-marker .user-marker-inner.ingulag::after {
+  border-color: rgb(143, 139, 139) transparent transparent transparent;
+}
+
+#key {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 10px;
+  border-radius: 5px;
+  color: black;
+  font-size: 13px;
+  z-index:9999;
+}
+
+#key > * {
+  padding: 4px 9px;
+  border-radius: 5px;
+}
+.picker {
+  z-index: 1000000000;
+  position: absolute;
+  top: 10px;
+  left: 55px;
+  background-color: transparent!important;
+  z-index: 1000;
+  max-width: 100px;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  border: none!important;
+}
+
+.userpick {
+  z-index: 1000000000;
+  padding: 4px 6px;
+  margin-bottom: 4px;
+  color: black;
+  border-radius: 3px;
+background-color: rgb(143, 139, 139);
+  font-size: 12px;
+  border: none!important;
+      padding: 4px 9px;
+    border-radius: 5px;
+}
+
+.leaflet-top.leaflet-right {
+  top: 100px;
+   width: 157px;
+ 
+  border: none!important;
+  right: 10px;
+}

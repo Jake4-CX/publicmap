@@ -1,0 +1,30 @@
+{
+  "name": "hg-map",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "biome check --write ./src --diagnostic-level=error",
+    "dev": "yarn && yarn lint && yarn build"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.8.1",
+    "@types/d3": "^7.4.3",
+    "@types/leaflet": "1.9.12",
+    "@types/leaflet-draw": "^1.0.11",
+    "typescript": "5.2.2",
+    "vite": "5.2.0",
+    "vite-plugin-javascript-obfuscator": "3.1.0"
+  },
+  "dependencies": {
+    "brotli-wasm": "^3.0.1",
+    "d3": "^7.9.0",
+    "e": "^0.2.33",
+    "leaflet": "1.9.4",
+    "leaflet-draw": "^1.0.4"
+  },
+  "packageManager": "yarn@4.3.1"
+}

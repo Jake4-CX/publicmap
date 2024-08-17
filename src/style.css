@@ -1,0 +1,58 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#map {
+  height: 100%;
+  width: 100%;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+}
+
+.custom-overlay {
+  background-color: black;
+  padding:5px;
+  font-size: 15px;
+  font-family: monospace;
+
+  & > p {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.leaflet-container.daytime .leaflet-tile {
+    filter: none;
+}
+
+.leaflet-container.evening .leaflet-tile {
+   filter: brightness(0.6) contrast(1.2) hue-rotate(348deg) saturate(1);
+}
+
+.leaflet-container.nighttime .leaflet-tile {
+    filter: brightness(0.4) contrast(1.2) hue-rotate(180deg) saturate(0.5);
+}
+
+.oob {
+  width: max-content;
+  color: red;
+  font-weight: bold;
+  margin-left: -20px;
+  font-size: 8px;
+}
